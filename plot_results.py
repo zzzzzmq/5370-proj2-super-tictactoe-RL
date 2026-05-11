@@ -122,78 +122,103 @@ def plot_baseline_lengths(save_dir: str = "figures") -> None:
 
 def plot_dqn_training_curve(save_dir: str = "figures") -> None:
     """
-    Phase D: DQN training curve against RandomAgent.
+    D阶段：DQN训练胜率曲线
     """
     ensure_dir(save_dir)
 
-    episodes = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    episodes = [
+        100, 200, 300, 400, 500,
+        600, 700, 800, 900, 1000,
+        1100, 1200, 1300, 1400, 1500,
+        1600, 1700, 1800, 1900, 2000,
+    ]
 
-    win_rate = [0.62, 0.66, 0.60, 0.66, 0.58, 0.60, 0.54, 0.70, 0.64, 0.54]
-    loss_rate = [0.38, 0.34, 0.40, 0.34, 0.42, 0.40, 0.46, 0.30, 0.36, 0.46]
-    avg_return = [0.24, 0.32, 0.20, 0.32, 0.16, 0.20, 0.08, 0.40, 0.28, 0.08]
+    win_rate = [
+        0.720, 0.700, 0.580, 0.520, 0.720,
+        0.600, 0.620, 0.500, 0.460, 0.500,
+        0.600, 0.740, 0.440, 0.500, 0.640,
+        0.580, 0.520, 0.480, 0.460, 0.600,
+    ]
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    loss_rate = [
+        0.280, 0.300, 0.420, 0.480, 0.280,
+        0.400, 0.380, 0.500, 0.540, 0.500,
+        0.400, 0.260, 0.560, 0.500, 0.360,
+        0.420, 0.480, 0.520, 0.540, 0.400,
+    ]
 
-    ax.plot(episodes, win_rate, marker="o", label="Win Rate")
-    ax.plot(episodes, loss_rate, marker="s", label="Loss Rate")
-    ax.plot(episodes, avg_return, marker="^", label="Avg Return")
+    avg_return = [
+        0.440, 0.400, 0.160, 0.040, 0.440,
+        0.200, 0.240, 0.000, -0.080, 0.000,
+        0.200, 0.480, -0.120, 0.000, 0.280,
+        0.160, 0.040, -0.040, -0.080, 0.200,
+    ]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(episodes, win_rate, marker="o", label="Win Rate")
+    plt.plot(episodes, loss_rate, marker="s", label="Loss Rate")
+    plt.plot(episodes, avg_return, marker="^", label="Avg Return")
 
     baseline_random_p1 = 0.545
-    ax.axhline(
+    plt.axhline(
         y=baseline_random_p1,
         linestyle="--",
         label="Random-vs-Random P1 Baseline",
     )
 
-    ax.set_ylim(0, 1.05)
-    ax.set_xlabel("Training Episode")
-    ax.set_ylabel("Value")
-    ax.set_title("DQN Training Performance vs Random Opponent")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-
-    fig.tight_layout()
+    plt.ylim(-0.15, 1.05)
+    plt.xlabel("Training Episode")
+    plt.ylabel("Value")
+    plt.title("DQN Training Performance vs Random Opponent")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
 
     save_path = os.path.join(save_dir, "dqn_training_curve.png")
-    fig.savefig(save_path, dpi=300, bbox_inches="tight")
-    plt.close(fig)
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
     print(f"Saved: {save_path}")
 
 
 def plot_dqn_vs_baselines(save_dir: str = "figures") -> None:
     """
-    Phase D: comparison between baseline strategies and DQN results.
+    D阶段：DQN与baseline对比图
     """
     ensure_dir(save_dir)
 
     labels = [
         "Random-vs-Random\n(P1 win rate)",
         "Heuristic-vs-Random\n(P1 win rate)",
-        "DQN Best Eval\n(win rate)",
-        "DQN Final Eval\n(win rate)",
+        "DQN Best Eval\n(ep 1200)",
+        "DQN Last Eval\n(ep 2000)",
     ]
 
-    values = [0.545, 0.960, 0.700, 0.540]
+    values = [0.545, 0.985, 0.740, 0.600]
 
     x = list(range(len(labels)))
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(x, values)
 
-    bars = ax.bar(x, values)
+    for bar, value in zip(bars, values):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            value + 0.015,
+            f"{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
 
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=10)
-    ax.set_ylim(0, 1.08)
-    ax.set_ylabel("Win Rate")
-    ax.set_title("Comparison Between Baselines and DQN Results")
-
-    ax.bar_label(bars, fmt="%.3f", padding=3, fontsize=9)
-
-    fig.tight_layout()
+    plt.xticks(x, labels, rotation=10)
+    plt.ylim(0, 1.05)
+    plt.ylabel("Win Rate")
+    plt.title("Comparison Between Baselines and DQN Results")
+    plt.tight_layout()
 
     save_path = os.path.join(save_dir, "dqn_vs_baselines.png")
-    fig.savefig(save_path, dpi=300, bbox_inches="tight")
-    plt.close(fig)
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
     print(f"Saved: {save_path}")
 
 
