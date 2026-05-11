@@ -48,29 +48,11 @@ python train_torchrl_dqn.py
 python plot_results.py
 ```
 
-## Watch One Game in Terminal
-
-```bash
-python watch_game.py
-```
-
 ## Interactive Demo
 
 ```bash
 streamlit run interactive_app.py
 ```
-
-## Main Results
-
-Baseline matchup results over 200 games:
-
-| Matchup | P1 Win | P2 Win | Draw | Avg Move Count | Avg Turns |
-|---|---:|---:|---:|---:|---:|
-| Random vs Random | 0.545 | 0.455 | 0.000 | 50.77 | 68.00 |
-| Heuristic vs Random | 0.960 | 0.040 | 0.000 | 31.21 | 39.55 |
-| Heuristic vs Heuristic | 0.565 | 0.435 | 0.000 | 31.91 | 40.49 |
-
-The DQN agent reaches a best evaluation win rate of 0.70 against the random opponent during training, while the final evaluation win rate is 0.54.
 
 ## Report
 
