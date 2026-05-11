@@ -13,7 +13,6 @@ This project implements a stochastic super tic-tac-toe game as a reinforcement l
 - `train_torchrl_dqn.py`: DQN training script.
 - `plot_results.py`: Generate result figures.
 - `run_tests.py`: Environment and geometry tests.
-- `watch_game.py`: Terminal-based game watching script.
 - `interactive_app.py`: Lightweight Streamlit interactive demo.
 - `figures/`: Result figures and demo screenshots.
 - `5370_proj2_report.pdf`: Final project report.
