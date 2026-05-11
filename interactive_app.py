@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import streamlit as st
-
+import numpy as np
 from env import SuperTicTacToeEnv
 
 try:
     from agents.random_agent import RandomAgent
     from agents.heuristic_agent import HeuristicAgent
+    from agents.dqn_agent import DQNAgent          
 except ModuleNotFoundError:
     from random_agent import RandomAgent
     from heuristic_agent import HeuristicAgent
+    from dqn_agent import DQNAgent                 
 
 
 def idx_to_lbrc(index: int):
@@ -77,21 +79,23 @@ def parse_step_result(result):
     return result.observation, result.reward, result.done, result.info
 
 
-def make_opponent(name: str, seed: int):
+def make_opponent(name: str, seed: int, model_path: str = "checkpoints/dqn_final.pt"):
     if name == "RandomAgent":
         return RandomAgent(seed=seed)
     if name == "HeuristicAgent":
         return HeuristicAgent(seed=seed)
+    if name == "DQNAgent":
+        return DQNAgent(model_path=model_path)    
     raise ValueError(f"Unknown opponent: {name}")
 
 
-def reset_game(opponent_name: str, seed: int):
+def reset_game(opponent_name: str, seed: int, model_path: str = "checkpoints/dqn_final.pt"):
     env = SuperTicTacToeEnv(seed=seed)
     env.reset()
 
     st.session_state.env = env
     st.session_state.opponent_name = opponent_name
-    st.session_state.opponent = make_opponent(opponent_name, seed + 100)
+    st.session_state.opponent = make_opponent(opponent_name, seed + 100, model_path)
     st.session_state.logs = []
     st.session_state.game_seed = seed
 
@@ -163,8 +167,9 @@ def render_cell(container, idx: int, value: int) -> None:
         container.markdown(
             f"""
             <div style="
-                height: 54px;
-                border-radius: 10px;
+                width: 100%;
+                aspect-ratio: 1 / 1;
+                border-radius: 6px;
                 border: 2px solid #1f77b4;
                 background-color: #d8ecff;
                 color: #0b4f8a;
@@ -173,12 +178,12 @@ def render_cell(container, idx: int, value: int) -> None:
                 align-items: center;
                 justify-content: center;
                 font-weight: 700;
-                font-size: 22px;
+                font-size: 16px;
                 line-height: 1.0;
                 margin-bottom: 0.35rem;
             ">
                 <div>O</div>
-                <div style="font-size: 12px; font-weight: 500; opacity: 0.75;">{idx}</div>
+                <div style="font-size: 9px; font-weight: 500; opacity: 0.75;">{idx}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -188,8 +193,9 @@ def render_cell(container, idx: int, value: int) -> None:
         container.markdown(
             f"""
             <div style="
-                height: 54px;
-                border-radius: 10px;
+                width: 100%;
+                aspect-ratio: 1 / 1;
+                border-radius: 6px;
                 border: 2px solid #d62728;
                 background-color: #ffe0e0;
                 color: #9c1111;
@@ -198,12 +204,12 @@ def render_cell(container, idx: int, value: int) -> None:
                 align-items: center;
                 justify-content: center;
                 font-weight: 700;
-                font-size: 22px;
+                font-size: 16px;
                 line-height: 1.0;
                 margin-bottom: 0.35rem;
             ">
                 <div>X</div>
-                <div style="font-size: 12px; font-weight: 500; opacity: 0.75;">{idx}</div>
+                <div style="font-size: 9px; font-weight: 500; opacity: 0.75;">{idx}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -213,17 +219,21 @@ def render_level(level: int):
     env = st.session_state.env
     width = get_level_width(level)
 
-    st.markdown(f"### Level {level}")
+    MAX_WIDTH = 12  
+    left_pad = (MAX_WIDTH - width) // 2  
+
+    # st.markdown(f"### Level {level}")
 
     for row in range(4):
-        cols = st.columns(width)
+        cols = st.columns(MAX_WIDTH)
         for gc in range(width):
             block = gc // 4
             col = gc % 4
             idx = lbrc_to_idx(level, block, row, col)
             value = int(env.board[idx])
 
-            render_cell(cols[gc], idx, value)
+            # render_cell(cols[gc], idx, value)
+            render_cell(cols[gc + left_pad], idx, value)
 
 
 def render_status():
@@ -275,14 +285,41 @@ def main():
     st.title("Super Tic-Tac-Toe Interactive Demo")
     st.caption("Human Player (O) vs Agent Opponent (X)")
 
+    st.markdown("""
+    <style>
+        div[data-testid="stHorizontalBlock"] div[data-testid="stButton"] > button {
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1 / 1 !important;
+            padding: 1px !important;
+            min-height: 0px !important;
+            font-size: 9px !important;
+            line-height: 1.1 !important;
+        }
+        div[data-testid="stHorizontalBlock"] div[data-testid="column"] {
+            padding-left: 2px !important;
+            padding-right: 2px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ========== Sidebar ==========
     with st.sidebar:
         st.header("Settings")
 
         opponent_name = st.selectbox(
             "Opponent",
-            ["RandomAgent", "HeuristicAgent"],
+            ["RandomAgent", "HeuristicAgent", "DQNAgent"],
             index=0,
         )
+
+        model_path = "checkpoints/dqn_final.pt"
+        if opponent_name == "DQNAgent":
+            model_path = st.text_input(
+                "Model checkpoint path",
+                value="checkpoints/dqn_final.pt",
+                help="Path to a saved DQN checkpoint (.pt file)",
+            )
 
         seed = st.number_input(
             "Random seed",
@@ -293,7 +330,7 @@ def main():
         )
 
         if st.button("New Game", use_container_width=True):
-            reset_game(opponent_name, int(seed))
+            reset_game(opponent_name, int(seed), model_path)
             st.rerun()
 
         st.markdown("---")
@@ -302,9 +339,11 @@ def main():
         st.write("- Each adjacent square: probability 1/16")
         st.write("- Outside or occupied realized square: forfeited move")
 
+    # ========== 初始化游戏状态 ==========
     if "env" not in st.session_state:
-        reset_game(opponent_name, int(seed))
+        reset_game(opponent_name, int(seed), model_path)
 
+    # ========== 页面主体布局 ==========
     left, right = st.columns([2.2, 1.0])
 
     with left:
