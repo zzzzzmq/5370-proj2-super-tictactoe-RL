@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import os
 from dataclasses import dataclass
 
@@ -93,9 +94,6 @@ def epsilon_by_step(step: int, cfg: TrainConfig) -> float:
 
 
 def select_action(q_net, obs, action_mask, epsilon, device):
-    """
-    Epsilon-greedy with action masking.
-    """
     legal_actions = np.flatnonzero(action_mask > 0)
     if len(legal_actions) == 0:
         raise RuntimeError("No legal actions available.")
@@ -106,7 +104,6 @@ def select_action(q_net, obs, action_mask, epsilon, device):
     obs_t = torch.tensor(obs, dtype=torch.float32, device=device).unsqueeze(0)
     q_values = q_net(obs_t).detach().cpu().numpy()[0]
 
-    # mask illegal actions
     masked_q = np.full_like(q_values, fill_value=-1e9, dtype=np.float32)
     masked_q[legal_actions] = q_values[legal_actions]
 
@@ -187,6 +184,9 @@ def train(cfg: TrainConfig):
 
     global_step = 0
 
+    best_win_rate = -1.0
+    best_checkpoint = None
+
     for episode in range(1, cfg.total_episodes + 1):
         obs, info = env.reset(seed=cfg.seed + episode)
         action_mask = info["action_mask"]
@@ -225,7 +225,6 @@ def train(cfg: TrainConfig):
             ep_steps += 1
             global_step += 1
 
-            # optimization
             if len(replay) >= cfg.min_replay_size:
                 (
                     obs_t,
@@ -244,7 +243,6 @@ def train(cfg: TrainConfig):
 
                 q_values = q_net(obs_t).gather(1, act_t).squeeze(-1)
 
-                # Double DQN style next-action selection
                 next_online_q = q_net(next_obs_t)
                 next_online_q[~next_mask_t] = -1e9
                 next_actions = torch.argmax(next_online_q, dim=1, keepdim=True)
@@ -291,25 +289,44 @@ def train(cfg: TrainConfig):
                 ckpt_path,
             )
 
+            if stats["win_rate"] > best_win_rate:
+                best_win_rate = stats["win_rate"]
+                best_checkpoint = {
+                    "episode": episode,
+                    "model_state_dict": copy.deepcopy(q_net.state_dict()),
+                    "target_state_dict": copy.deepcopy(target_net.state_dict()),
+                    "optimizer_state_dict": copy.deepcopy(optimizer.state_dict()),
+                    "config": cfg.__dict__,
+                }
+                print(f"*** New best model: win_rate={best_win_rate:.3f} ***")
+
     final_path = os.path.join(cfg.save_dir, "dqn_final.pt")
-    torch.save(
-        {
-            "episode": cfg.total_episodes,
-            "model_state_dict": q_net.state_dict(),
-            "target_state_dict": target_net.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "config": cfg.__dict__,
-        },
-        final_path,
-    )
-    print(f"Training finished. Final model saved to: {final_path}")
+    if best_checkpoint is not None:
+        torch.save(best_checkpoint, final_path)
+        print(
+            f"Training finished. "
+            f"Best model (ep {best_checkpoint['episode']}, win={best_win_rate:.3f}) "
+            f"saved to: {final_path}"
+        )
+    else:
+        torch.save(
+            {
+                "episode": cfg.total_episodes,
+                "model_state_dict": q_net.state_dict(),
+                "target_state_dict": target_net.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "config": cfg.__dict__,
+            },
+            final_path,
+        )
+        print(f"Training finished. Final model saved to: {final_path}")
 
 
 if __name__ == "__main__":
     cfg = TrainConfig(
         seed=123,
         device="cuda" if torch.cuda.is_available() else "cpu",
-        total_episodes=1000,
+        total_episodes=2000,
         eval_every=100,
         eval_episodes=50,
         min_replay_size=1000,

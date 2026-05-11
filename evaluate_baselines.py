@@ -183,17 +183,17 @@ def run_heuristic_vs_heuristic(
 
 
 if __name__ == "__main__":
-    # 运行 RandomAgent vs RandomAgent
+    # RandomAgent vs RandomAgent
     print("Running Random vs Random baseline:")
     stats = run_random_vs_random(n_games=200, base_seed=123)
     print_matchup_stats(stats)
 
-    # 运行 HeuristicAgent vs RandomAgent
+    # HeuristicAgent vs RandomAgent
     print("\nRunning HeuristicAgent vs RandomAgent:")
     stats = run_heuristic_vs_random(n_games=200, base_seed=123)
     print_matchup_stats(stats)
 
-    # 运行 HeuristicAgent vs HeuristicAgent
+    # HeuristicAgent vs HeuristicAgent
     print("\nRunning HeuristicAgent vs HeuristicAgent:")
     stats = run_heuristic_vs_heuristic(n_games=200, base_seed=123)
     print_matchup_stats(stats)

@@ -339,11 +339,9 @@ def main():
         st.write("- Each adjacent square: probability 1/16")
         st.write("- Outside or occupied realized square: forfeited move")
 
-    # ========== 初始化游戏状态 ==========
     if "env" not in st.session_state:
         reset_game(opponent_name, int(seed), model_path)
 
-    # ========== 页面主体布局 ==========
     left, right = st.columns([2.2, 1.0])
 
     with left:

@@ -180,13 +180,10 @@ def test_resolve_action_forfeit_when_sampled_square_is_occupied():
 
     action = 69
 
-    # 先占用 intended action，自然只要采样到它就必须 forfeited
     env.board[action] = -1
 
     realized = env.resolve_action(action)
 
-    # 这里不一定每次都采到 intended，因此不能一次就断言
-    # 我们多跑几次，只要出现 None 就说明 occupied sampled square 会 forfeited
     found_none = realized is None
 
     for _ in range(200):
