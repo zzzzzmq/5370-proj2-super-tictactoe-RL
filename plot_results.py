@@ -22,8 +22,8 @@ def plot_baseline_winrates(save_dir: str = "figures") -> None:
         "Heuristic vs Heuristic",
     ]
 
-    p1_win = [0.545, 0.960, 0.565]
-    p2_win = [0.455, 0.040, 0.435]
+    p1_win = [0.545, 0.985, 0.515]
+    p2_win = [0.455, 0.015, 0.485]
     draw = [0.000, 0.000, 0.000]
 
     x = list(range(len(matchups)))
@@ -82,8 +82,8 @@ def plot_baseline_lengths(save_dir: str = "figures") -> None:
         "Heuristic vs Heuristic",
     ]
 
-    avg_move_count = [50.77, 31.21, 31.91]
-    avg_turns = [68.00, 39.55, 40.49]
+    avg_move_count = [48.85, 32.20, 33.67]
+    avg_turns = [64.80, 40.80, 43.28]
 
     x = list(range(len(matchups)))
     width = 0.35

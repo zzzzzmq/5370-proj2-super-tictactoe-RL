@@ -349,6 +349,16 @@ def test_action_mask_updates_after_successful_step():
     assert_true(mask.sum() == 95, "legal action count should become 95")
     print("test_action_mask_updates_after_successful_step passed!")
 
+def test_centered_geometry_counts():
+    from geometry import row_lines, diag_lines, column_lines, winning_lines
+
+    assert len(row_lines) == 60, f"Expected 60 row lines, got {len(row_lines)}"
+    assert len(diag_lines) == 60, f"Expected 60 diag lines, got {len(diag_lines)}"
+    assert len(column_lines) == 36, f"Expected 36 column lines, got {len(column_lines)}"
+    assert len(winning_lines) == 156, f"Expected 156 winning lines, got {len(winning_lines)}"
+
+    print("test_centered_geometry_counts passed!")
+
 
 def test_action_mask_unchanged_after_forfeit():
     env = SuperTicTacToeEnv(seed=123)
@@ -394,6 +404,19 @@ def test_heuristic_agent_uses_current_player_perspective():
     assert action == 3, f"Expected player -1 to choose winning action 3, got {action}"
     print("test_heuristic_agent_uses_current_player_perspective passed!")
 
+def test_centered_geometry_offsets():
+    from geometry import index_to_geom
+
+    # Level 1, index 0 should be at global column 4, not 0
+    assert index_to_geom[0] == (1, 0, 4), f"index 0 geom wrong: {index_to_geom[0]}"
+
+    # Level 2, index 16 should be at global column 2
+    assert index_to_geom[16] == (2, 0, 2), f"index 16 geom wrong: {index_to_geom[16]}"
+
+    # Level 3, index 48 should be at global column 0
+    assert index_to_geom[48] == (3, 0, 0), f"index 48 geom wrong: {index_to_geom[48]}"
+
+    print("test_centered_geometry_offsets passed!")
 
 # =========================================================
 # Run all tests
@@ -432,6 +455,8 @@ def run_all_tests():
     test_action_mask_unchanged_after_forfeit()
     test_observation_last_entry_is_current_player()
     test_heuristic_agent_uses_current_player_perspective()
+    test_centered_geometry_counts()
+    test_centered_geometry_offsets()
 
     print("\nAll tests passed!")
 
